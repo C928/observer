@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Observer</title>
+  <style>
+    body { margin: 0; padding: 0; }
+  </style>
+</head>
+<body>
+  <script>
+    const img_src = "http://#:#/update/observed.#";
+    function create_image() {
+      let img = document.createElement("img");
+      img.src = img_src;
+      img.alt = "observed.# not found";
+      img.onclick = function() {
+        this.requestFullscreen();
+      };
+      document.body.appendChild(img);
+
+      return img;
+    }
+
+    function reload_image(img) {
+      let timestamp = new Date().getTime();
+      img.src = img_src + "?t=" + timestamp;
+    }
+
+    let img = create_image();
+    setInterval(() => { reload_image(img) }, #);
+  </script>
+</body>
+</html>

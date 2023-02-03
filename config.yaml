@@ -1,0 +1,9 @@
+server_ip: 192.168.1.70
+host: 0.0.0.0
+port: 1337
+target_browser: "chromium"
+url: "https://gnu.org"
+file_format: "jpeg"
+interval: 1
+quiet_flag: false
+gui_mode: false
