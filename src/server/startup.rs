@@ -1,30 +1,10 @@
-use actix_files::Files;
+use crate::server::routes::{preview, update};
+use actix_web::web::Data;
 use actix_web::{rt, App, HttpServer};
 use actix_web_lab::web::redirect;
 use anyhow::anyhow;
-use std::fs;
-use std::fs::File;
-use std::io::Write;
 use std::net::TcpListener;
 use std::sync::mpsc;
-
-fn write_preview_html(
-    server_ip: &str,
-    port: u16,
-    file_format: &str,
-    interval: u16,
-) -> anyhow::Result<()> {
-    let contents = fs::read_to_string("preview_template.html")?
-        .replacen('#', server_ip, 1)
-        .replacen('#', &port.to_string(), 1)
-        .replacen('#', file_format, 2)
-        .replacen('#', &((interval as u64) * 1000 * 60).to_string(), 1);
-
-    let mut fd = File::create("preview.html")?;
-    write!(fd, "{}", contents)?;
-
-    Ok(())
-}
 
 #[actix_web::main]
 pub async fn start_server(
@@ -39,7 +19,13 @@ pub async fn start_server(
     let listener = TcpListener::bind(&address)?;
     port = listener.local_addr()?.port();
 
-    write_preview_html(server_ip, port, file_format, interval)?;
+    let preview_html = Data::new(PreviewHtmlContents::new(
+        server_ip,
+        port,
+        file_format,
+        interval,
+    ));
+    let observed_file_format = Data::new(ObservedFileName(format!("observed.{}", file_format)));
     let address_str = format!("Server address: {}:{}", server_ip, port);
     if let Some((tx, _)) = status_channels {
         if tx
@@ -58,11 +44,13 @@ pub async fn start_server(
         println!("{address_str}");
     }
 
-    let srv = HttpServer::new(|| {
+    let srv = HttpServer::new(move || {
         App::new()
-            .service(redirect("/", "/preview/preview.html"))
-            .service(Files::new("/preview", "."))
-            .service(Files::new("/update", "."))
+            .service(redirect("/", "/preview"))
+            .service(preview)
+            .service(update)
+            .app_data(preview_html.clone())
+            .app_data(observed_file_format.clone())
     })
     .listen(listener)?
     .run();
@@ -102,4 +90,19 @@ pub async fn start_server(
     }
 
     Ok(())
+}
+
+pub struct ObservedFileName(pub String);
+
+pub struct PreviewHtmlContents(pub String);
+impl PreviewHtmlContents {
+    fn new(server_ip: &str, port: u16, file_format: &str, interval: u16) -> Self {
+        Self(
+            include_str!("preview_template.html")
+                .replacen('#', server_ip, 1)
+                .replacen('#', &port.to_string(), 1)
+                .replacen('#', file_format, 1)
+                .replacen('#', &((interval as u64) * 1000 * 60).to_string(), 1),
+        )
+    }
 }
