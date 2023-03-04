@@ -7,7 +7,7 @@ use std::sync::mpsc;
 
 use crate::observer::start_observing;
 use crate::server::start_server;
-use crate::utils::{
+use crate::settings::{
     load_config_gui_mode, parse_config_gui_mode, parse_file_format, parse_host, parse_server_ip,
     parse_target_browser, parse_url, Settings,
 };

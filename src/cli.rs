@@ -1,4 +1,4 @@
-use crate::utils::{
+use crate::settings::{
     parse_file_format, parse_host, parse_server_ip, parse_target_browser, parse_url,
 };
 use clap::Parser;

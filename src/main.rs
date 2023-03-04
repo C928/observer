@@ -1,7 +1,7 @@
 use observer::gui;
 use observer::observer::start_observing;
 use observer::server::start_server;
-use observer::utils::Settings;
+use observer::settings::Settings;
 
 fn main() -> anyhow::Result<()> {
     let s = Settings::parse_settings()?;
@@ -41,6 +41,5 @@ fn main() -> anyhow::Result<()> {
 
 //todo: optional: ===================================
 //todo: ui files with build script
-//todo: tls
 //todo: add /favicon.ico
 //todo: diagrams
