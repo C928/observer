@@ -1,8 +1,7 @@
 use crate::cli::Args;
-use anyhow::anyhow;
+use anyhow::bail;
 use clap::Parser;
 use config::{Config, ConfigError, File, FileFormat};
-use std::io::{Error, ErrorKind};
 
 #[derive(Default, serde::Deserialize)]
 pub struct Settings {
@@ -42,17 +41,9 @@ impl Settings {
 
         if !args.gui_mode {
             if args.server_ip.is_none() {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    "--server-ip must be specified\nFor more information try --help",
-                )
-                .into());
+                bail!("--server-ip must be specified\nFor more information try --help");
             } else if args.url.is_none() {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    "--url must be specified\nFor more information try --help",
-                )
-                .into());
+                bail!("--url must be specified\nFor more information try --help");
             }
         } else {
             return Ok(Self {
@@ -154,7 +145,7 @@ fn parse_config_file(str_config: [&mut String; 4]) -> anyhow::Result<()> {
                 str_config[i].push_str(&ret);
             }
             Err(e) => {
-                return Err(anyhow!("{e}"));
+                bail!("{e}");
             }
         }
     }

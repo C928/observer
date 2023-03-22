@@ -2,7 +2,7 @@ use crate::server::routes::{preview, update};
 use actix_web::web::Data;
 use actix_web::{rt, App, HttpServer};
 use actix_web_lab::web::redirect;
-use anyhow::anyhow;
+use anyhow::bail;
 use std::net::TcpListener;
 use std::sync::mpsc;
 
@@ -36,9 +36,7 @@ pub async fn start_server(
             ))
             .is_err()
         {
-            return Err(anyhow!(
-                "Error: Sending Server message through mpsc channel"
-            ));
+            bail!("Error: Sending Server message through mpsc channel");
         }
     } else {
         println!("{address_str}");
@@ -62,9 +60,7 @@ pub async fn start_server(
         let rx = rx.clone();
         rt = Some(rt::spawn(async move {
             if rx.recv().is_err() {
-                return Err(anyhow!(
-                    "Error: Receiving shutdown message through crossbeam channel"
-                ));
+                bail!("Error: Receiving shutdown message through crossbeam channel");
             }
 
             if tx
@@ -74,9 +70,7 @@ pub async fn start_server(
                 ))
                 .is_err()
             {
-                return Err(anyhow!(
-                    "Error: Sending Server message through mpsc channel"
-                ));
+                bail!("Error: Sending Server message through mpsc channel");
             }
 
             srv_handle.stop(false).await;

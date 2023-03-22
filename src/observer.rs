@@ -1,4 +1,4 @@
-use anyhow::anyhow;
+use anyhow::{anyhow, bail};
 use chrono;
 use headless_chrome::protocol::cdp::Page::CaptureScreenshotFormatOption;
 use headless_chrome::protocol::cdp::Target::CreateTarget;
@@ -23,9 +23,7 @@ pub fn start_observing(
             .send(format!("Observer started | {}", starting_timestamp))
             .is_err()
         {
-            return Err(anyhow!(
-                "Error: Sending Observer message through mpsc channel"
-            ));
+            bail!("Error: Sending Observer message through mpsc channel");
         }
     } else {
         let s = if interval == 1 { "" } else { "s" };
@@ -50,9 +48,7 @@ pub fn start_observing(
                     .send(format!("Observer stopped | {}", stopping_timestamp))
                     .is_err()
                 {
-                    return Err(anyhow!(
-                        "Error: Sending Observer message through mpsc channel"
-                    ));
+                    bail!("Error: Sending Observer message through mpsc channel");
                 }
 
                 return Ok(());
@@ -92,14 +88,14 @@ fn browser_capture(
                 })?;
 
                 if let Err(e) = tab.navigate_to(url) {
-                    return Err(anyhow!("{}\nCapture of {} failed", e, url));
+                    bail!("{}\nCapture of {} failed", e, url);
                 }
                 tab.wait_until_navigated()?;
 
                 let fmt = match &*file_format.to_lowercase() {
                     "png" => CaptureScreenshotFormatOption::Png,
                     "jpeg" => CaptureScreenshotFormatOption::Jpeg,
-                    _ => return Err(anyhow!("Error: file format must either be JPEG or PNG")),
+                    _ => bail!("Error: file format must either be JPEG or PNG"),
                 };
 
                 let image_data = tab.capture_screenshot(fmt, Some(100), None, false)?;
@@ -110,20 +106,18 @@ fn browser_capture(
                 Ok(())
             }) {
                 Ok(ret) => ret?,
-                Err(_) => {
-                    return Err(anyhow!(
-                        "Error: Capture of {} failed.\nMake sure chrome or chromium is installed",
-                        url
-                    ))
-                }
+                Err(_) => bail!(
+                    "Error: Capture of {} failed.\nMake sure chrome or chromium is installed",
+                    url
+                ),
             }
         }
         "edge" => {
             if env::consts::OS != "windows" {
-                return Err(anyhow!(
+                bail!(
                     "Error: Edge target only supported on Windows.\nOS detected: {}",
                     env::consts::OS
-                ));
+                );
             }
 
             let screenshot_arg = format!(
@@ -145,11 +139,11 @@ fn browser_capture(
                 .status()?
                 .success()
             {
-                return Err(anyhow!("Error: Failed to capture {}", url));
+                bail!("Error: Failed to capture {}", url);
             }
         }
         browser => {
-            return Err(anyhow!("Error: Unsupported target browser '{}'", browser));
+            bail!("Error: Unsupported target browser '{}'", browser);
         }
     }
 
@@ -160,9 +154,7 @@ fn browser_capture(
                 .send(format!("{} | {}", filename, saving_timestamp))
                 .is_err()
             {
-                return Err(anyhow!(
-                    "Error: Sending Observer message through mpsc channel"
-                ));
+                bail!("Error: Sending Observer message through mpsc channel");
             }
         } else {
             println!("{} | {} saved", saving_timestamp, filename);

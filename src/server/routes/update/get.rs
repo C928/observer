@@ -1,5 +1,5 @@
-use actix_files::NamedFile;
 use crate::server::startup::ObservedFileName;
+use actix_files::NamedFile;
 use actix_web::web::Data;
 use actix_web::{get, Result};
 
